@@ -2,6 +2,16 @@ import { BedrockChat } from "@langchain/community/chat_models/bedrock";
 import { Document } from "@langchain/core/documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import dotenv from "dotenv";
+import {
+  BedrockRuntimeClient,
+  InvokeModelCommand,
+} from "@aws-sdk/client-bedrock-runtime";
+
+const bedrockClient = new BedrockRuntimeClient({
+  region: "us-east-2",
+});
+
+const bedrockEmbeddingModel = "amazon.titan-embed-text-v2:0";
 
 dotenv.config();
 
@@ -9,6 +19,24 @@ const model = new BedrockChat({
   model: "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
   region: "us-east-2",
 });
+
+
+export const generateEmbedding = async (text: string): Promise<number[]> => {
+  const response = await bedrockClient.send(
+    new InvokeModelCommand({
+      modelId: bedrockEmbeddingModel,
+      contentType: "application/json",
+      accept: "application/json", 
+      body: JSON.stringify({
+        inputText: text
+      })
+    })
+  );
+  
+  const body = JSON.parse(Buffer.from(response.body).toString());
+  return body.embedding; 
+}
+
 
 export const generateSummaryForFile = async (file: Document) => {
   const prompt =

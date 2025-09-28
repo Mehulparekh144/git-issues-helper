@@ -1,5 +1,5 @@
 import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
-import { generateSummaryForFile, generateSummaryForIssue } from "./ai.js";
+import { generateSummaryForFile, generateEmbedding,generateSummaryForIssue } from "./ai.js";
 import { Octokit } from "@octokit/rest";
 import { Git } from "../db/models/Git.js";
 
@@ -83,9 +83,10 @@ export const getGitRepoContents = async (
   const res = [];
   for (const doc of docs.slice(10, 20)) {
     const summary = await generateSummaryForFile(doc);
-    // TODO: Generate vector for the summary
-    // TODO: Save the summary to the database
-    // Return nothing
+
+    const vector = await generateEmbedding(summary as string);
+    
+    await Git.findOneAndUpdate({ repoURL: repo }, { $push: { files: { summary: summary, filePath: doc.metadata.source, vector: vector } } });
     res.push({
       summary: summary as string,
       filePath: doc.metadata.source,
@@ -115,6 +116,9 @@ export const getVectorForIssue = async (issue: {
   title: string;
 }) => {
   const summary = await generateSummaryForIssue(issue);
-  //TODO: Get the vectors and save them to the database
-  return summary as string;
+  const vector = await generateEmbedding(summary as string);
+  return {
+    summary: summary,
+    vector: vector,
+  }
 };
