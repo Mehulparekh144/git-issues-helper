@@ -1,8 +1,10 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getGitRepoContents = void 0;
-const github_1 = require("@langchain/community/document_loaders/web/github");
-const ai_1 = require("./ai");
+import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
+import { generateSummaryForFile, generateSummaryForIssue } from "./ai.js";
+import { Octokit } from "@octokit/rest";
+import { Git } from "../db/models/Git.js";
+const octokit = new Octokit({
+    auth: process.env.GIT_TOKEN,
+});
 const IGNORE_FILES = [
     ".gitignore",
     ".env",
@@ -46,8 +48,12 @@ const IGNORE_FILES = [
     ".DS_Store",
     "Thumbs.db",
 ];
-const getGitRepoContents = async (repo) => {
-    const loader = new github_1.GithubRepoLoader(repo, {
+export const getGitRepoContents = async (repo) => {
+    const repoData = await Git.findOne({ repoURL: repo });
+    if (!repoData) {
+        await Git.create({ repoURL: repo });
+    }
+    const loader = new GithubRepoLoader(repo, {
         branch: "main",
         accessToken: process.env.GIT_TOKEN,
         recursive: true,
@@ -62,7 +68,7 @@ const getGitRepoContents = async (repo) => {
     }
     const res = [];
     for (const doc of docs.slice(10, 20)) {
-        const summary = await (0, ai_1.generateSummaryForFile)(doc);
+        const summary = await generateSummaryForFile(doc);
         // TODO: Generate vector for the summary
         // TODO: Save the summary to the database
         // Return nothing
@@ -73,5 +79,22 @@ const getGitRepoContents = async (repo) => {
     }
     return res;
 };
-exports.getGitRepoContents = getGitRepoContents;
+export const getGitIssues = async (repoURL) => {
+    const [owner, repo] = repoURL.split("github.com/")[1]?.split("/") ?? [];
+    if (!owner || !repo) {
+        throw new Error("Invalid repository URL");
+    }
+    const issues = await octokit.issues.listForRepo({
+        repo,
+        // state: "open",
+        owner,
+        per_page: 100,
+    });
+    return issues.data;
+};
+export const getVectorForIssue = async (issue) => {
+    const summary = await generateSummaryForIssue(issue);
+    //TODO: Get the vectors and save them to the database
+    return summary;
+};
 //# sourceMappingURL=git.js.map

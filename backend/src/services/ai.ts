@@ -33,7 +33,36 @@ Please provide a similar technical summary for the provided code.`);
     inputText: file.pageContent,
     filePath: file.metadata.source,
   });
-  console.log(formattedPrompt);
+  const res = await model.invoke(formattedPrompt);
+  return res.content;
+};
+
+export const generateSummaryForIssue = async (issue: {
+  body: string;
+  title: string;
+}) => {
+  const prompt =
+    ChatPromptTemplate.fromTemplate(`You are an AI assistant that analyzes GitHub issues and produces a clear technical approach that can guide resolution.  
+Your output will later be vectorized and compared with code embeddings, so it must be contextually rich, precise, and directly tied to actionable code-related concepts.  
+
+Guidelines:  
+- Begin with a brief restatement of the issue in technical terms.  
+- Then, describe in detail how one might approach solving it: debugging steps, relevant code areas, possible architectural considerations, or implementation strategies.  
+- Use terminology and phrasing that would naturally align with how the problem connects to source code.  
+- The explanation should be detailed enough to meaningfully match similar code vectors, but not overflow into an entire implementation.  
+- Do not include filler, apologies, or unrelated commentary.  
+- Focus purely on problem understanding and the pathway to a solution.  
+
+Issue:  
+{issue}  
+
+Output format:  
+Plain text, one well-structured technical explanation of how to approach or solve the issue.
+`);
+
+  const formattedPrompt = await prompt.format({
+    issue: `${issue.title}\n${issue.body}`,
+  });
   const res = await model.invoke(formattedPrompt);
   return res.content;
 };

@@ -1,12 +1,28 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const express_1 = require("express");
-const git_1 = require("../services/git");
-const router = (0, express_1.Router)();
+import { Router } from "express";
+import { getGitIssues, getGitRepoContents, getVectorForIssue, } from "../services/git.js";
+import { Git } from "../db/models/Git.js";
+const router = Router();
 router.post("/new", async (req, res) => {
     const { repo } = req.body;
-    const data = await (0, git_1.getGitRepoContents)(repo);
+    const data = await getGitRepoContents(repo);
     res.json(data);
 });
-exports.default = router;
+router.get("/issues/:id", async (req, res) => {
+    const { id } = req.params;
+    const repo = await Git.findById(id);
+    if (!repo) {
+        return res.status(404).json({ message: "Repository not found" });
+    }
+    const data = await getGitIssues(repo.repoURL);
+    return res.json(data);
+});
+router.post("/issues/summary", async (req, res) => {
+    const { body, title } = req.body;
+    const summary = await getVectorForIssue({
+        body,
+        title,
+    });
+    return res.json(summary);
+});
+export default router;
 //# sourceMappingURL=git.js.map

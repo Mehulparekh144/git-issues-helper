@@ -1,5 +1,11 @@
 import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
-import { generateSummaryForFile } from "./ai";
+import { generateSummaryForFile, generateSummaryForIssue } from "./ai.js";
+import { Octokit } from "@octokit/rest";
+import { Git } from "../db/models/Git.js";
+
+const octokit = new Octokit({
+  auth: process.env.GIT_TOKEN as string,
+});
 
 const IGNORE_FILES = [
   ".gitignore",
@@ -53,6 +59,12 @@ interface GitRepoContents {
 export const getGitRepoContents = async (
   repo: string
 ): Promise<GitRepoContents[]> => {
+  const repoData = await Git.findOne({ repoURL: repo });
+
+  if (!repoData) {
+    await Git.create({ repoURL: repo });
+  }
+
   const loader = new GithubRepoLoader(repo, {
     branch: "main",
     accessToken: process.env.GIT_TOKEN as string,
@@ -81,4 +93,28 @@ export const getGitRepoContents = async (
   }
 
   return res;
+};
+
+export const getGitIssues = async (repoURL: string) => {
+  const [owner, repo] = repoURL.split("github.com/")[1]?.split("/") ?? [];
+
+  if (!owner || !repo) {
+    throw new Error("Invalid repository URL");
+  }
+  const issues = await octokit.issues.listForRepo({
+    repo,
+    // state: "open",
+    owner,
+    per_page: 100,
+  });
+  return issues.data;
+};
+
+export const getVectorForIssue = async (issue: {
+  body: string;
+  title: string;
+}) => {
+  const summary = await generateSummaryForIssue(issue);
+  //TODO: Get the vectors and save them to the database
+  return summary as string;
 };

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
@@ -11,7 +12,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.5.2",
@@ -23,11 +23,14 @@
     "@aws-sdk/types": "^3.893.0",
     "@langchain/community": "^0.3.56",
     "@langchain/core": "^0.3.77",
+    "@octokit/rest": "^22.0.0",
     "@smithy/eventstream-codec": "^2.2.0",
     "@smithy/protocol-http": "^5.2.1",
     "@smithy/signature-v4": "^5.2.1",
     "@smithy/util-utf8": "^4.1.0",
+    "dotenv": "^17.2.2",
     "ignore": "^5.3.2",
+    "mongoose": "^8.18.2",
     "zod": "^3.25.76"
   }
 }
