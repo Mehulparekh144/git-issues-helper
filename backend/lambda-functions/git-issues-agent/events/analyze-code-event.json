@@ -1,0 +1,13 @@
+{
+  "body": "{\"repo\": \"https://github.com/jenishk20/DevTinder\"}",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "httpMethod": "POST",
+  "path": "/analyze-code",
+  "queryStringParameters": null,
+  "pathParameters": null,
+  "requestContext": {
+    "httpMethod": "POST"
+  }
+}

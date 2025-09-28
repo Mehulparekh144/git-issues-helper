@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Git Issues Helper AI Agent
+
+Globals:
+  Function:
+    Timeout: 300
+    MemorySize: 1024
+    Runtime: nodejs22.x
+    Environment:
+      Variables:
+        GIT_TOKEN: !Ref GitToken
+        MONGO_URI: !Ref MongoUri
+
+Parameters:
+  GitToken:
+    Type: String
+    Description: GitHub Personal Access Token
+    NoEcho: true
+  MongoUri:
+    Type: String
+    Description: MongoDB Connection String
+    NoEcho: true
+
+Resources:
+  AnalyzeCodeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: analyze-code/
+      Handler: app.lambdaHandler
+      Events:
+        AnalyzeCodeApi:
+          Type: Api
+          Properties:
+            Path: /analyze-code
+            Method: post
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+
+Outputs:
+  AnalyzeCodeApi:
+    Description: "API Gateway endpoint URL for Analyze Code function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/analyze-code/"
+  AnalyzeCodeFunction:
+    Description: "Analyze Code Lambda Function ARN"
+    Value: !GetAtt AnalyzeCodeFunction.Arn
