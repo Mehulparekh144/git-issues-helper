@@ -31,20 +31,24 @@ export async function lambdaHandler(event, context) {
             contentType: "application/json",
             accept: "application/json",
             body: JSON.stringify({
+                anthropic_version: "bedrock-2023-05-31",
+                max_tokens: 1000,
+                system: systemPrompt,
                 messages: [
                     {
-                        role : "system",
-                        content: systemPrompt
-                    },
-                    {
                         role: "user",
-                        content: "Code Document: " + content
+                        content: "This is the code document: " + content
                     }
                 ]
             })
         }))
         const body = JSON.parse(Buffer.from(response.body).toString());
-        return body.content;
+        return {
+            statusCode: 200,
+            body: JSON.stringify({
+                summary: body.content[0].text
+            })
+        };
     } catch (err) {
         console.error("Lambda error:", err);
         return {
