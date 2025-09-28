@@ -41,6 +41,24 @@ Resources:
                 - bedrock:InvokeModel
               Resource: "*"
 
+  RepoSummarizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: repo-summarizer-agent/
+      Handler: app.lambdaHandler
+      Events:
+        SummarizeCodeApi:
+          Type: Api
+          Properties:
+            Path: /summarize-code
+            Method: post
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+
 Outputs:
   AnalyzeCodeApi:
     Description: "API Gateway endpoint URL for Analyze Code function"
@@ -48,3 +66,9 @@ Outputs:
   AnalyzeCodeFunction:
     Description: "Analyze Code Lambda Function ARN"
     Value: !GetAtt AnalyzeCodeFunction.Arn
+  RepoSummarizeCodeApi:
+    Description: "API Gateway endpoint URL for Repository Summarizer function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/summarize-code/"
+  RepoSummarizerFunction:
+    Description: "Repository Summarizer Lambda Function ARN"
+    Value: !GetAtt RepoSummarizerFunction.Arn

@@ -1,0 +1,3 @@
+{
+  "content": "import React from 'react';\n\nconst Button = ({ onClick, children, variant = 'primary' }) => {\n  return (\n    <button \n      className={`btn btn-${variant}`}\n      onClick={onClick}\n    >\n      {children}\n    </button>\n  );\n};\n\nexport default Button;"
+}
