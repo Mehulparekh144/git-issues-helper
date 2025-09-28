@@ -1,44 +1,30 @@
 import { BedrockChat } from "@langchain/community/chat_models/bedrock";
-import { Document } from "@langchain/core/documents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import dotenv from "dotenv";
-import {
-  BedrockRuntimeClient,
-  InvokeModelCommand,
-} from "@aws-sdk/client-bedrock-runtime";
-
+import { BedrockRuntimeClient, InvokeModelCommand, } from "@aws-sdk/client-bedrock-runtime";
 const bedrockClient = new BedrockRuntimeClient({
-  region: "us-east-2",
+    region: "us-east-2",
 });
-
 const bedrockEmbeddingModel = "amazon.titan-embed-text-v2:0";
-
 dotenv.config();
-
 const model = new BedrockChat({
-  model: "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-  region: "us-east-2",
+    model: "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+    region: "us-east-2",
 });
-
-export const generateEmbedding = async (text: string): Promise<number[]> => {
-  const response = await bedrockClient.send(
-    new InvokeModelCommand({
-      modelId: bedrockEmbeddingModel,
-      contentType: "application/json",
-      accept: "application/json",
-      body: JSON.stringify({
-        inputText: text,
-      }),
-    })
-  );
-
-  const body = JSON.parse(Buffer.from(response.body).toString());
-  return body.embedding;
+export const generateEmbedding = async (text) => {
+    const response = await bedrockClient.send(new InvokeModelCommand({
+        modelId: bedrockEmbeddingModel,
+        contentType: "application/json",
+        accept: "application/json",
+        body: JSON.stringify({
+            inputText: text,
+        }),
+    }));
+    const body = JSON.parse(Buffer.from(response.body).toString());
+    return body.embedding;
 };
-
-export const generateSummaryForFile = async (file: Document) => {
-  const prompt =
-    ChatPromptTemplate.fromTemplate(`You are a senior software engineer specializing in technical documentation and knowledge transfer. Analyze the following code from {filePath} and provide a clear, concise technical explanation that would help a junior engineer understand the codebase.
+export const generateSummaryForFile = async (file) => {
+    const prompt = ChatPromptTemplate.fromTemplate(`You are a senior software engineer specializing in technical documentation and knowledge transfer. Analyze the following code from {filePath} and provide a clear, concise technical explanation that would help a junior engineer understand the codebase.
 
 Code Document:
 {inputText}
@@ -54,21 +40,15 @@ Keep your response under 100 words. Focus on technical accuracy and clarity whil
 Example Output:
 The \`auth.ts\` module implements JWT-based authentication with Redis session management. The \`authenticateUser\` function handles credential validation and token generation. We use Redis for distributed session storage with a 24-hour TTL. The implementation follows the OAuth 2.0 specification and includes rate limiting for security. Key functions: \`authenticateUser\`, \`validateToken\`, \`refreshToken\`.
 Please provide a similar technical summary for the provided code.`);
-
-  const formattedPrompt = await prompt.format({
-    inputText: file.pageContent,
-    filePath: file.metadata.source,
-  });
-  const res = await model.invoke(formattedPrompt);
-  return res.content;
+    const formattedPrompt = await prompt.format({
+        inputText: file.pageContent,
+        filePath: file.metadata.source,
+    });
+    const res = await model.invoke(formattedPrompt);
+    return res.content;
 };
-
-export const generateSummaryForIssue = async (issue: {
-  body: string;
-  title: string;
-}) => {
-  const prompt =
-    ChatPromptTemplate.fromTemplate(`You are an AI assistant that analyzes GitHub issues and produces a clear technical approach that can guide resolution.  
+export const generateSummaryForIssue = async (issue) => {
+    const prompt = ChatPromptTemplate.fromTemplate(`You are an AI assistant that analyzes GitHub issues and produces a clear technical approach that can guide resolution.  
 Your output will later be vectorized and compared with code embeddings, so it must be contextually rich, precise, and directly tied to actionable code-related concepts.  
 
 Guidelines:  
@@ -85,10 +65,10 @@ Issue:
 Output format:  
 Plain text, one well-structured technical explanation of how to approach or solve the issue.
 `);
-
-  const formattedPrompt = await prompt.format({
-    issue: `${issue.title}\n${issue.body}`,
-  });
-  const res = await model.invoke(formattedPrompt);
-  return res.content;
+    const formattedPrompt = await prompt.format({
+        issue: `${issue.title}\n${issue.body}`,
+    });
+    const res = await model.invoke(formattedPrompt);
+    return res.content;
 };
+//# sourceMappingURL=ai.js.map
