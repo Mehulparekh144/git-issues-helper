@@ -1,15 +1,15 @@
 {
-  "name": "vectorizer-agent",
+  "name": "issue-answer-agent",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.896.0"
   }

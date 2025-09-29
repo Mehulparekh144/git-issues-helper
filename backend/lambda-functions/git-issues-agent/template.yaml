@@ -58,6 +58,43 @@ Resources:
               Action:
                 - bedrock:InvokeModel
               Resource: "*"
+    
+  VectorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: vectorizer-agent/
+      Handler: app.lambdaHandler
+      Events:
+        VectorizeCodeApi:
+          Type: Api
+          Properties:
+            Path: /vectorize-code
+            Method: post
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
+
+  IssueAnswerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: issue-answer-agent/
+      Handler: app.lambdaHandler
+      Events:
+        IssueAnswerApi:
+          Type: Api
+          Properties:
+            Path: /issue-answer
+            Method: post
+
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: "*"
 
 Outputs:
   AnalyzeCodeApi:
@@ -72,3 +109,15 @@ Outputs:
   RepoSummarizerFunction:
     Description: "Repository Summarizer Lambda Function ARN"
     Value: !GetAtt RepoSummarizerFunction.Arn
+  VectorizeCodeApi:
+    Description: "API Gateway endpoint URL for Vectorizer function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/vectorize-code/"
+  VectorizerFunction:
+    Description: "Vectorizer Lambda Function ARN"
+    Value: !GetAtt VectorizerFunction.Arn
+  IssueAnswerApi:
+    Description: "API Gateway endpoint URL for Issue Answer function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/issue-answer/"
+  IssueAnswerFunction:
+    Description: "Issue Answer Lambda Function ARN"
+    Value: !GetAtt IssueAnswerFunction.Arn

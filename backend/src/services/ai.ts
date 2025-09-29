@@ -39,7 +39,6 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
 export const generateSummaryForFile = async (file: Document) => {
   const prompt =
     ChatPromptTemplate.fromTemplate(`You are a senior software engineer specializing in technical documentation and knowledge transfer. Analyze the following code from {filePath} and provide a clear, concise technical explanation that would help a junior engineer understand the codebase.
-
 Code Document:
 {inputText}
 
