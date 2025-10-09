@@ -1,0 +1,11 @@
+{
+    "functions" : [
+        {
+            "name": "RepoSummarizerFunction",
+            "description": "Summarize a code file given ",
+            "parameters": {
+                "content" : "string"
+            }
+        }
+    ]
+}

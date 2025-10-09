@@ -95,6 +95,24 @@ Resources:
               Action:
                 - bedrock:InvokeModel
               Resource: "*"
+    
+  GitRepoSummarizerFlowFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: git-repo-summarizer-flow/
+      Handler: app.lambdaHandler
+      Events:
+        GitRepoSummarizerFlowApi:
+          Type: Api
+          Properties:
+            Path: /git-repo-summarizer-flow
+            Method: post
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - lambda:InvokeFunction
+              Resource: "*"
 
 Outputs:
   AnalyzeCodeApi:
@@ -121,3 +139,9 @@ Outputs:
   IssueAnswerFunction:
     Description: "Issue Answer Lambda Function ARN"
     Value: !GetAtt IssueAnswerFunction.Arn
+  GitRepoSummarizerFlowApi:
+    Description: "API Gateway endpoint URL for Git Repo Summarizer Flow function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/git-repo-summarizer-flow/"
+  GitRepoSummarizerFlowFunction:
+    Description: "Git Repo Summarizer Flow Lambda Function ARN"
+    Value: !GetAtt GitRepoSummarizerFlowFunction.Arn

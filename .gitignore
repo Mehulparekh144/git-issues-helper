@@ -8,3 +8,5 @@
 package-lock.json
 
 **/dist/*
+**/resources.json
+**/AGENTS.md
