@@ -1,5 +1,5 @@
 import { GithubRepoLoader } from "@langchain/community/document_loaders/web/github";
-import { mongoose } from "mongoose";
+import  mongoose  from "mongoose";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 const IGNORE_FILES = [
@@ -46,6 +46,18 @@ const IGNORE_FILES = [
   "Thumbs.db",
 ]
 
+let connection = null;
+
+const connectToDatabase = async () => {
+  if (connection) {
+    return connection;
+  }
+
+
+  connection = await mongoose.connect(process.env.MONGO_URI);
+  return connection;
+};
+
 
 const repoJobSchema = new mongoose.Schema({
   repoURL: {
@@ -53,7 +65,8 @@ const repoJobSchema = new mongoose.Schema({
     required: true,
   },
   status: {
-    type: [
+    type: String,
+    enum: [
       "getting-contents",
       "parsing-contents",
       "summarizing-contents",
@@ -97,17 +110,15 @@ const gitSchema = new mongoose.Schema({
   },
 });
 
-const Git = mongoose.model("Git", gitSchema);
-
-
-const RepoJob = mongoose.model("RepoJob", repoJobSchema);
-
+const Git = mongoose.models.Git || mongoose.model("Git", gitSchema);
+const RepoJob =
+  mongoose.models.RepoJob || mongoose.model("RepoJob", repoJobSchema);
 
 export async function lambdaHandler(event, context) {
     try {
         const { repo } = event;
         
-        await mongoose.connect(process.env.MONGODB_URI);
+        await connectToDatabase();
         
         const job = await RepoJob.create({
             repoURL: repo,
@@ -135,7 +146,7 @@ export async function lambdaHandler(event, context) {
             };
         }
 
-        const filteredDocs = filterTopFiles(docs, 50);
+        const filteredDocs = filterTopFiles(docs, 2);
         
         await updateRepoJob(repo, "parsing-contents");
 
@@ -150,29 +161,33 @@ export async function lambdaHandler(event, context) {
             const batchPromises = batch.map(async (doc) => {
                 try {
                     const summaryResponse = await lambdaClient.send(new InvokeCommand({
-                        FunctionName: "repo-summarizer-agent",
+                        FunctionName: "git-issues-agent-v2-RepoSummarizerFunction-mBnfHf5ZxXMO",
                         Payload: JSON.stringify({
                             content: doc.pageContent
                         })
                     }));
                     
+                    console.log("doc" , doc)
                     const summaryResult = JSON.parse(new TextDecoder().decode(summaryResponse.Payload));
+                    console.log("summary", summaryResult)
                     
                     const vectorResponse = await lambdaClient.send(new InvokeCommand({
-                        FunctionName: "vectorizer-agent",
+                        FunctionName: "git-issues-agent-v2-VectorizerFunction-MoGMov3D9qvw",
                         Payload: JSON.stringify({
-                            content: summaryResult.summary
+                            content: JSON.parse(summaryResult.body).summary
                         })
                     }));
                     
                     const vectorResult = JSON.parse(new TextDecoder().decode(vectorResponse.Payload));
+                    console.log("Vector" , vectorResult)
                     
                     return {
                         filePath: doc.metadata.source,
-                        summary: summaryResult.summary,
-                        vector: vectorResult.vector
+                        summary: JSON.parse(summaryResult.body).summary,
+                        vector: JSON.parse(vectorResult.body).vector
                     };
                 } catch (error) {
+                    await updateRepoJob(repo, "failed");
                     console.error(`Error processing file ${doc.metadata.source}:`, error);
                     return null;
                 }
